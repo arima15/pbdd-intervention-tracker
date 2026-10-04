@@ -4,48 +4,80 @@ let interventions = [
     {beneficiary_name: "John", beneficiary_type: "ARBO", intervention_type: "Social Pension", date: "2026-03-10", status: "ongoing"}
 ];
 
+function render(records) {
+    const list = document.getElementById('list');
+    const summary = document.getElementById('summary');
+    list.replaceChildren();
+    summary.replaceChildren();
+
+    records.forEach((intervention) => {
+        const row = document.createElement('li');
+        row.className = 'list-group-item';
+        const details = document.createElement('div');
+        details.className = 'row g-2';
+
+        [
+            ['Beneficiary', intervention.beneficiary_name],
+            ['Intervention', intervention.intervention_type],
+            ['Type', intervention.beneficiary_type],
+            ['Date', intervention.date],
+            ['Status', intervention.status]
+        ].forEach(([label, value]) => {
+            const detail = document.createElement('div');
+            detail.className = 'col-12 col-md-6 text-break';
+            const strong = document.createElement('strong');
+            strong.textContent = `${label}: `;
+            detail.append(strong, document.createTextNode(value));
+            details.appendChild(detail);
+        });
+
+        row.appendChild(details);
+        list.appendChild(row);
+    });
+
+    const statusCounts = records.reduce((counts, intervention) => {
+        counts[intervention.status] = (counts[intervention.status] || 0) + 1;
+        return counts;
+    }, {});
+    const summaryBlock = document.createElement('div');
+    summaryBlock.className = 'alert alert-primary mb-0';
+
+    const total = document.createElement('p');
+    total.className = 'fw-semibold mb-2';
+    total.textContent = `Total interventions: ${records.length}`;
+    summaryBlock.appendChild(total);
+
+    const statuses = Object.entries(statusCounts);
+    if (statuses.length === 0) {
+        const emptyStatus = document.createElement('p');
+        emptyStatus.className = 'mb-0';
+        emptyStatus.textContent = 'No status counts';
+        summaryBlock.appendChild(emptyStatus);
+    } else {
+        statuses.forEach(([status, count]) => {
+            const statusLine = document.createElement('p');
+            statusLine.className = 'mb-1 text-break';
+            statusLine.textContent = `${status}: ${count}`;
+            summaryBlock.appendChild(statusLine);
+        });
+    }
+
+    summary.appendChild(summaryBlock);
+}
+
+render(interventions);
+
 // Template literal to display interventions
 interventions.forEach((intervention) => {
     console.log(`Beneficiary: ${intervention.beneficiary_name} | Type: ${intervention.beneficiary_type} | Intervention: ${intervention.intervention_type} | Date: ${intervention.date} | Status: ${intervention.status}`);
 });
 
-function countByStatus(records, status) {
-    let matchCounter = 0;
-
-    for(let i = 0; i < records.length; i++) {
-        if (records[i].status == status) {
-            matchCounter++;
-        }
-    }
-
-    return matchCounter;
-}
-
-function countByType(records, type){
-    let matchCounter = 0;
-
-    for(let i = 0; i < records.length; i++) {
-        if(records[i].intervention_type == type) {
-            matchCounter++;
-        }
-    }
-
-    return matchCounter;
-}
-
-const totalCount = interventions.length;
-const statusCounts = {
-    pending: countByStatus(interventions, 'pending'),
-    completed: countByStatus(interventions, 'completed'),
-    ongoing: countByStatus(interventions, 'ongoing')
-};
-const typeCounts = {
-    'Health Checkup': countByType(interventions, 'Health Checkup'),
-    'Livelihood Training': countByType(interventions, 'Livelihood Training'),
-    'Social Pension': countByType(interventions, 'Social Pension')
-};
-
 console.log('\n--- Summary ---');
-console.log(`Total count: ${totalCount}`);
-console.log(`Status counts: pending=${statusCounts.pending}, completed=${statusCounts.completed}, ongoing=${statusCounts.ongoing}`);
-console.log(`Type counts: Health Checkup=${typeCounts['Health Checkup']}, Livelihood Training=${typeCounts['Livelihood Training']}, Social Pension=${typeCounts['Social Pension']}`);
+console.log(`Total count: ${interventions.length}`);
+const statusCounts = interventions.reduce((counts, intervention) => {
+    counts[intervention.status] = (counts[intervention.status] || 0) + 1;
+    return counts;
+}, {});
+Object.entries(statusCounts).forEach(([status, count]) => {
+    console.log(`${status}: ${count}`);
+});
